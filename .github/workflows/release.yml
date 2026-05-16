@@ -34,7 +34,7 @@ jobs:
             artifact: devctl-windows-x86_64.exe
             binary: target/x86_64-pc-windows-msvc/release/devctl.exe
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
