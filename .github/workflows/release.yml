@@ -1,0 +1,66 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact: devctl-linux-x86_64
+            binary: target/x86_64-unknown-linux-gnu/release/devctl
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact: devctl-macos-x86_64
+            binary: target/x86_64-apple-darwin/release/devctl
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact: devctl-macos-aarch64
+            binary: target/aarch64-apple-darwin/release/devctl
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact: devctl-windows-x86_64.exe
+            binary: target/x86_64-pc-windows-msvc/release/devctl.exe
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
+      - name: Prepare artifact
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp "${{ matrix.binary }}" "dist/${{ matrix.artifact }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/${{ matrix.artifact }}
+
+  publish:
+    name: Publish GitHub release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*

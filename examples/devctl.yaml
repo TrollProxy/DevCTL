@@ -1,0 +1,169 @@
+# devctl configuration.
+#
+# Global config is loaded before this file. Local devctl.yaml values override
+# global values. Use `devctl --config path/to/file.yaml` for an explicit file.
+#
+# Tool placeholders:
+#   {root}     absolute project root
+#   {file}     matched file target
+#   {dir}      matched file's parent directory when a tool runs per directory
+#   {relative} target relative to {root}
+#
+# Execution mode is inferred:
+#   args/check_args containing {file}: one command per file
+#   args/check_args containing {dir}: one command per unique matched directory
+#   no target placeholder: one command from {root}, only if globs match
+
+version: 1
+
+global:
+  docker_fallback: true
+  ignore:
+    - "**/vendor/**"
+    - "**/node_modules/**"
+    - "**/dist/**"
+
+# Legacy top-level ignore is still supported and is merged with global.ignore.
+ignore:
+  - ".git/**"
+  - ".terraform/**"
+  - "target/**"
+
+terraform:
+  binary: terraform
+  # Optional exact or prefix version pin, for example "1.8" or "1.8.5".
+  version:
+
+formatters:
+  terraform:
+    enabled: true
+    globs: ["**/*.tf", "**/*.tfvars"]
+    command: terraform
+    args: ["fmt", "{dir}"]
+    check_args: ["fmt", "-check", "-diff", "{dir}"]
+    ignore: []
+
+  json:
+    enabled: true
+    globs: ["**/*.json"]
+    command: "builtin:json"
+    args: []
+
+  python:
+    enabled: true
+    globs: ["**/*.py"]
+    command: ruff
+    args: ["format", "--quiet", "{file}"]
+    check_args: ["format", "--check", "--quiet", "{file}"]
+
+  php:
+    enabled: false
+    globs: ["**/*.php"]
+    command: php-cs-fixer
+    args: ["fix", "--quiet", "{file}"]
+
+  go:
+    enabled: true
+    globs: ["**/*.go"]
+    command: gofmt
+    args: ["-w", "{file}"]
+    check_args: ["-l", "{file}"]
+
+  javascript:
+    enabled: true
+    globs: ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx", "**/*.css", "**/*.html"]
+    command: prettier
+    args: ["--write", "{file}"]
+    check_args: ["--check", "{file}"]
+
+  markdown:
+    enabled: true
+    globs: ["**/*.md", "**/*.markdown"]
+    command: prettier
+    args: ["--write", "{file}"]
+    check_args: ["--check", "{file}"]
+
+  # Add any formatter:
+  # proto:
+  #   enabled: true
+  #   globs: ["**/*.proto"]
+  #   command: buf
+  #   args: ["format", "-w", "{file}"]
+  #   check_args: ["format", "--diff", "{file}"]
+  #   ignore: ["**/generated/**"]
+
+linters:
+  enabled: true
+
+  tflint:
+    enabled: true
+    globs: ["**/*.tf"]
+    command: tflint
+    args: ["--no-color", "--chdir", "{dir}"]
+    docker_fallback: false
+    docker_image: ghcr.io/terraform-linters/tflint
+
+  tfsec:
+    enabled: true
+    globs: ["**/*.tf"]
+    command: tfsec
+    args: ["--no-color", "{dir}"]
+    docker_fallback: false
+    docker_image: aquasec/tfsec
+
+  checkov:
+    enabled: false
+    globs: ["**/*.tf", "**/*.tfvars", "**/*.yaml", "**/*.yml", "**/*.json"]
+    command: checkov
+    args: ["-d", "{root}", "--quiet"]
+    docker_fallback: false
+    docker_image: bridgecrew/checkov
+
+  python:
+    enabled: true
+    globs: ["**/*.py"]
+    command: ruff
+    args: ["check", "{file}"]
+
+  # Add any linter:
+  # actionlint:
+  #   enabled: true
+  #   globs: [".github/workflows/*.yml", ".github/workflows/*.yaml"]
+  #   command: actionlint
+  #   args: ["{file}"]
+
+validators:
+  enabled: true
+
+  terraform:
+    enabled: true
+    globs: ["**/*.tf"]
+    command: "builtin:terraform-validate"
+    args: ["{dir}"]
+    extra_args: []
+
+  # Add any validator:
+  # kubeconform:
+  #   enabled: true
+  #   globs: ["k8s/**/*.yaml"]
+  #   command: kubeconform
+  #   args: ["-strict", "{file}"]
+
+docker:
+  enabled: true
+  hadolint:
+    enabled: true
+    globs: ["Dockerfile", "Dockerfile.*", "**/Dockerfile", "**/Dockerfile.*"]
+    command: hadolint
+    args: ["{file}"]
+    extra_args: []
+    docker_fallback: true
+    docker_image: hadolint/hadolint
+
+commands:
+  test:
+    command: cargo
+    args: ["test", "--all"]
+  lint:
+    command: cargo
+    args: ["clippy", "--all-targets", "--all-features", "--", "-D", "warnings"]

@@ -1,0 +1,217 @@
+# Default devctl project configuration.
+#
+# This file is intentionally usable as-is. Keep the longer commented template in
+# examples/devctl.yaml in sync when adding new config surface.
+
+version: 1
+
+global:
+  docker_fallback: true
+  ignore:
+    - "**/vendor/**"
+    - "**/node_modules/**"
+    - "**/dist/**"
+    - "**/build/**"
+    - "**/.terraform/**"
+
+ignore:
+  - ".git/**"
+  - "target/**"
+
+terraform:
+  binary: terraform
+  version:
+
+formatters:
+  terraform:
+    enabled: true
+    globs: ["**/*.tf", "**/*.tfvars"]
+    command: terraform
+    args: ["fmt", "{dir}"]
+    check_args: ["fmt", "-check", "-diff", "{dir}"]
+
+  json:
+    enabled: true
+    globs: ["**/*.json"]
+    command: "builtin:json"
+    args: []
+
+  yaml:
+    enabled: true
+    globs: ["**/*.yaml", "**/*.yml"]
+    command: prettier
+    args: ["--write", "{file}"]
+    check_args: ["--check", "{file}"]
+
+  toml:
+    enabled: true
+    globs: ["**/*.toml"]
+    command: taplo
+    args: ["format", "{file}"]
+    check_args: ["format", "--check", "{file}"]
+
+  markdown:
+    enabled: true
+    globs: ["**/*.md", "**/*.markdown"]
+    command: prettier
+    args: ["--write", "{file}"]
+    check_args: ["--check", "{file}"]
+
+  javascript:
+    enabled: true
+    globs: ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx", "**/*.css", "**/*.html"]
+    command: prettier
+    args: ["--write", "{file}"]
+    check_args: ["--check", "{file}"]
+
+  python:
+    enabled: true
+    globs: ["**/*.py"]
+    command: ruff
+    args: ["format", "--quiet", "{file}"]
+    check_args: ["format", "--check", "--quiet", "{file}"]
+
+  go:
+    enabled: true
+    globs: ["**/*.go"]
+    command: gofmt
+    args: ["-w", "{file}"]
+    check_args: ["-l", "{file}"]
+
+  shell:
+    enabled: true
+    globs: ["**/*.sh", "**/*.bash", "**/*.zsh"]
+    command: shfmt
+    args: ["-w", "{file}"]
+    check_args: ["-d", "{file}"]
+
+  rust:
+    enabled: true
+    globs: ["**/*.rs"]
+    command: rustfmt
+    args: ["{file}"]
+    check_args: ["--check", "{file}"]
+
+  php:
+    enabled: false
+    globs: ["**/*.php"]
+    command: php-cs-fixer
+    args: ["fix", "--quiet", "{file}"]
+
+linters:
+  enabled: true
+
+  tflint:
+    enabled: true
+    globs: ["**/*.tf"]
+    command: tflint
+    args: ["--no-color", "--chdir", "{dir}"]
+    docker_fallback: true
+    docker_image: ghcr.io/terraform-linters/tflint
+
+  tfsec:
+    enabled: true
+    globs: ["**/*.tf"]
+    command: tfsec
+    args: ["--no-color", "{dir}"]
+    docker_fallback: true
+    docker_image: aquasec/tfsec
+
+  hadolint:
+    enabled: true
+    globs: ["Dockerfile", "Dockerfile.*", "**/Dockerfile", "**/Dockerfile.*"]
+    command: hadolint
+    args: ["{file}"]
+    docker_fallback: true
+    docker_image: hadolint/hadolint
+
+  python:
+    enabled: true
+    globs: ["**/*.py"]
+    command: ruff
+    args: ["check", "{file}"]
+
+  rust:
+    enabled: false
+    globs: ["**/*.rs", "Cargo.toml"]
+    command: cargo
+    args: ["clippy", "--all-targets", "--all-features", "--", "-D", "warnings"]
+
+  go:
+    enabled: false
+    globs: ["**/*.go"]
+    command: golangci-lint
+    args: ["run", "{dir}"]
+
+  markdown:
+    enabled: false
+    globs: ["**/*.md", "**/*.markdown"]
+    command: markdownlint
+    args: ["{file}"]
+
+  php:
+    enabled: false
+    globs: ["**/*.php"]
+    command: phpstan
+    args: ["analyse", "{file}"]
+
+  checkov:
+    enabled: false
+    globs: ["**/*.tf", "**/*.tfvars", "**/*.yaml", "**/*.yml", "**/*.json"]
+    command: checkov
+    args: ["-d", "{root}", "--quiet"]
+    docker_fallback: true
+    docker_image: bridgecrew/checkov
+
+validators:
+  enabled: true
+
+  terraform:
+    enabled: true
+    globs: ["**/*.tf"]
+    command: "builtin:terraform-validate"
+    args: ["{dir}"]
+
+  python:
+    enabled: false
+    globs: ["**/*.py"]
+    command: python
+    args: ["-m", "py_compile", "{file}"]
+
+  node:
+    enabled: false
+    globs: ["package.json"]
+    command: npm
+    args: ["test"]
+
+  go:
+    enabled: false
+    globs: ["**/*.go"]
+    command: go
+    args: ["test", "./..."]
+
+  php:
+    enabled: false
+    globs: ["composer.json", "**/*.php"]
+    command: composer
+    args: ["validate", "--strict"]
+
+docker:
+  enabled: true
+  hadolint:
+    enabled: true
+    globs: ["Dockerfile", "Dockerfile.*", "**/Dockerfile", "**/Dockerfile.*"]
+    command: hadolint
+    args: ["{file}"]
+    extra_args: []
+    docker_fallback: true
+    docker_image: hadolint/hadolint
+
+commands:
+  test:
+    command: cargo
+    args: ["test", "--all"]
+
+  lint:
+    command: cargo
+    args: ["clippy", "--all-targets", "--all-features", "--", "-D", "warnings"]

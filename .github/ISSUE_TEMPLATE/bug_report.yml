@@ -1,0 +1,64 @@
+name: Bug report
+description: Report a reproducible problem in devctl.
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve devctl. Please include enough detail to reproduce the issue.
+  - type: input
+    id: version
+    attributes:
+      label: devctl version
+      description: Run `devctl --version`.
+      placeholder: devctl 0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command
+      description: Which command did you run?
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Doctor output
+      description: Paste `devctl --doctor` output if relevant.
+      render: text
+  - type: textarea
+    id: config
+    attributes:
+      label: Relevant devctl.yaml
+      render: yaml
+  - type: textarea
+    id: logs
+    attributes:
+      label: Additional logs or context
+      render: text

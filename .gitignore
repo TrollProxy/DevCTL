@@ -1,0 +1,7 @@
+/target/
+/.terraform/
+/.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.log
+*.tmp
